@@ -43,7 +43,7 @@
 {% for net in iptables_nat_networks %}
 #NAT traffic from the range {{ net.internal_net }} through {{ net.external_dev }}
 
--A POSTROUTING -i {{ net.internal_dev  }} -o {{ net.external_dev }} -s {{ net.internal_net }} -j MASQUERADE
+-A POSTROUTING -o {{ net.external_dev }} -s {{ net.internal_net }} -j MASQUERADE
 {% endfor %}
 
 COMMIT
