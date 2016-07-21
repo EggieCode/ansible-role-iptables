@@ -20,6 +20,15 @@
 - name: enable ufw service at boot
   service: name=ufw enabled=True
 
+- name: setup kernel tracking
+  lineinfile:
+    dest: /etc/default/ufw
+    regexp: '^IPT_MODULES='
+    line: 'IPT_MODULES="{{ iptables_kernel_modules }}"'
+    state: present
+  notify:
+    - restart ufw
+
 - name: set ufw default forward policy to deny
   lineinfile:
     dest=/etc/default/ufw
@@ -92,15 +101,6 @@
   ufw: rule=allow proto={{ item.proto }} port={{ item.port }}
   with_items: iptables_enable_ports
   when: iptables_masquerade and iptables_enable_ports is defined
-  notify:
-    - restart ufw
-
-- name: setup kernel tracking
-  lineinfile:
-    dest: /etc/default/ufw
-    regexp: '^IPT_MODULES='
-    line: 'IPT_MODULES="{{ iptables_kernel_modules }}"'
-    state: present
   notify:
     - restart ufw
 
