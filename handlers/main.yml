@@ -21,7 +21,7 @@
   service: name=ufw state=stopped
 
 - name: reload ufw rules
-  shell: ufw disable && ufw enable
+  shell: ufw reload 
 
 - name: disable ufw rules
   shell: ufw disable

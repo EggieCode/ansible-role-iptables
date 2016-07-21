@@ -20,7 +20,13 @@ iptables_kernel_modules: "nf_conntrack_ftp nf_nat_ftp nf_conntrack_netbios_ns"
 # Networks on which to provide NAT masquerading.
 iptables_nat_networks:
   # array of networks for which NAT services are desired.
-  - { internal_net: "172.16.69.0/24", external_dev: "eth0" }
+  - { internal_net: "172.16.69.0/24", internal_dev: "virbr0", external_dev: "eth0" }
+
+iptables_exit_route:
+  # array of ip's that exits via defrent ip. Usefull for mutiple ips on
+the host machine
+  - { internal_address: "172.168.69.23", external_dev: "eth0", external_address:
+    "245.244.243.242" }
 
 # Networks to allow free-flow traffic as 'trusted' networks.
 iptables_allowed_networks:
@@ -30,12 +36,20 @@ iptables_allowed_networks:
 # Ports to forward to internal (behind the NAT) servers.
 iptables_forwards:
   # array of ports to forward, e.g.
-  - { interface: eth0, proto: tcp, inport: 443, fwd_address: 192.168.69.2, dport: 443 }
+  - { interface: eth0, proto: tcp, inport: 443, dest_address: "245.244.243.242" ,fwd_address: 192.168.69.2, dport: 443 }
 
 # Ports on to allow inbound traffic.
 iptables_enable_ports:
   # array of ports to enable inbound to the external network interface
   - { port: 443, proto: "tcp" }
+
+# IPv6 Configs
+
+# IPv6 network forward rule. Sets incomming data to RELATED,ESTABLISHED
+ip6tables_forward_network:
+  # Forward IPv6 network
+  - { internal_net: "2001:DB8:aa:1337::/64", external_dev: "eth0", internal_dev: "virbr0"}
+
 ```
 
 ## Example playbook

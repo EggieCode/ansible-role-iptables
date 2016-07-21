@@ -31,13 +31,19 @@
 
 # PREROUTING rules
 {% for f in iptables_forwards %}
--A PREROUTING -i {{ f.interface }} -p {{ f.proto }} -m {{ f.proto }} --dport {{ f.inport }} -j DNAT --to-destination {{ f.fwd_address}}:{{ f.dport }}
+-A PREROUTING -i {{ f.interface }} -d {{ f.dest_address }} -d -p {{ f.proto }} -m {{ f.proto }} --dport {{ f.inport }} -j DNAT --to-destination {{ f.fwd_address}}:{{ f.dport }}
 {% endfor %}
 
 # POSTROUTING rules
+{% for net in iptables_exit_route %}
+# POSTROUTING external route rule, {{ net.internal_address }} exits via {{ net.external_address }}.
+-A POSTROUTING -s {{ net.internal_address }} -o {{ net.external_dev }} -j SNAT --to-source {{ net.external_address }}
+{% endfor %}
+
 {% for net in iptables_nat_networks %}
 #NAT traffic from the range {{ net.internal_net }} through {{ net.external_dev }}
--A POSTROUTING -s {{ net.internal_net }} -o {{ net.external_dev }} -j MASQUERADE
+
+-A POSTROUTING -i {{ net.internal_dev  }} -o {{ net.external_dev }} -s {{ net.internal_net }} -j MASQUERADE
 {% endfor %}
 
 COMMIT
