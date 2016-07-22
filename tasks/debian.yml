@@ -26,6 +26,10 @@
     regexp: '^IPT_MODULES='
     line: 'IPT_MODULES="{{ iptables_kernel_modules }}"'
     state: present
+
+- name: configure iptables masquerading
+  template: src=Debian/ufw/before.rules.j2 dest=/etc/ufw/before.rules mode=0644
+  when: iptables_masquerade
   notify:
     - restart ufw
 
@@ -36,8 +40,6 @@
     line='DEFAULT_FORWARD_POLICY="ACCEPT"'
     state=present
   when: iptables_masquerade
-  notify:
-    - restart ufw
 
 - name: set ufw default forward policy to accept
   lineinfile:
@@ -46,20 +48,14 @@
     line='DEFAULT_FORWARD_POLICY="DENY"'
     state=present
   when: not iptables_masquerade
-  notify:
-    - restart ufw
 
 - name: set default ufw policy to deny
   ufw: state=enabled policy=deny
   when: iptables_masquerade
-  notify:
-    - restart ufw
 
 - name: set default ufw policy to allow
   ufw: state=enabled policy=allow
   when: not iptables_masquerade
-  notify:
-    - restart ufw
 
 - name: set forwarding rules on if necessary
   lineinfile:
@@ -67,8 +63,6 @@
     line="net/ipv4/ip_forward=1"
     state=present
   when: iptables_masquerade
-  notify:
-    - restart ufw
 
 - name: set forwarding rules off if necessary
   lineinfile:
@@ -76,14 +70,6 @@
     line="net/ipv4/ip_forward=1"
     state=absent
   when: not iptables_masquerade
-  notify:
-    - restart ufw
-
-- name: configure iptables masquerading
-  template: src=Debian/ufw/before.rules.j2 dest=/etc/ufw/before.rules mode=0644
-  when: iptables_masquerade
-  notify:
-    - restart ufw
 
 - name: enable ssh (always)
   ufw: rule=allow name=OpenSSH
@@ -92,14 +78,14 @@
 
 - name: Allow all access from trusted networks to this host
   ufw: rule=allow src={{ item }}
-  with_items: iptables_allowed_networks
+  with_items: "{{ iptables_allowed_networks }}"
   when: iptables_masquerade and iptables_allowed_networks is defined
   notify:
     - reload ufw
 
 - name: enable inbound ports
   ufw: rule=allow proto={{ item.proto }} port={{ item.port }}
-  with_items: iptables_enable_ports
+  with_items: "{{ iptables_enable_ports }}"
   when: iptables_masquerade and iptables_enable_ports is defined
   notify:
     - restart ufw
